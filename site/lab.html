@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Network Lab</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/lab.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Network Lab</h1>
+      <p class="sub">Phase 0 &middot; direct browser-to-browser link with telemetry and fault injection</p>
+    </div>
+    <span id="status" class="pill" data-level="idle">not connected</span>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2><i>1</i> Connect</h2>
+      <p class="hint">No server involved. One person is the <b>host</b>, the other <b>joins</b>. Swap two text codes over any chat app.</p>
+      <div class="cols">
+        <div class="col">
+          <h3>Host</h3>
+          <button id="btn-host" type="button">Create invite</button>
+          <label for="host-invite">Invite (send this to your friend)</label>
+          <textarea id="host-invite" rows="3" readonly placeholder="Press &ldquo;Create invite&rdquo;"></textarea>
+          <button id="copy-invite" type="button" class="ghost">Copy invite</button>
+          <label for="host-reply">Friend&rsquo;s reply</label>
+          <textarea id="host-reply" rows="3" placeholder="Paste the reply here"></textarea>
+          <button id="btn-connect" type="button">Connect</button>
+        </div>
+        <div class="col">
+          <h3>Join</h3>
+          <label for="join-invite">Invite from the host</label>
+          <textarea id="join-invite" rows="3" placeholder="Paste the invite here"></textarea>
+          <button id="btn-join" type="button">Create reply</button>
+          <label for="join-reply">Reply (send this back to the host)</label>
+          <textarea id="join-reply" rows="3" readonly placeholder="Appears after &ldquo;Create reply&rdquo;"></textarea>
+          <button id="copy-reply" type="button" class="ghost">Copy reply</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><i>2</i> Telemetry</h2>
+      <div id="panel"></div>
+    </section>
+
+    <section class="card">
+      <h2><i>3</i> Fault injection</h2>
+      <p class="hint">Applies to packets <b>this tab sends</b>. Delays are one-way: set the same preset on both tabs and round-trip time is about double.</p>
+      <div id="presets" class="presets"></div>
+      <div class="sliders">
+        <label>One-way delay <output id="v-delayMs">0</output> ms<input id="s-delayMs" type="range" min="0" max="400" step="5" value="0"></label>
+        <label>Jitter &plusmn; <output id="v-jitterMs">0</output> ms<input id="s-jitterMs" type="range" min="0" max="200" step="5" value="0"></label>
+        <label>Packet loss <output id="v-lossPct">0</output> %<input id="s-lossPct" type="range" min="0" max="30" step="0.5" value="0"></label>
+        <label>Duplicates <output id="v-dupPct">0</output> %<input id="s-dupPct" type="range" min="0" max="10" step="0.5" value="0"></label>
+        <label>Reordering <output id="v-reorderPct">0</output> %<input id="s-reorderPct" type="range" min="0" max="20" step="0.5" value="0"></label>
+      </div>
+      <p class="mono" id="chaos-counters">not running</p>
+    </section>
+
+    <section class="card">
+      <h2><i>4</i> Messages &amp; log</h2>
+      <form id="chat-form" class="chat">
+        <input id="chat-text" type="text" placeholder="Send a message over the reliable channel" autocomplete="off" disabled>
+        <button id="chat-send" type="submit" disabled>Send</button>
+      </form>
+      <ul id="log" class="log"></ul>
+    </section>
+  </main>
+
+  <script type="module" src="js/lab.js"></script>
+</body>
+</html>

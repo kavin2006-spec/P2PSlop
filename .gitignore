@@ -1,0 +1,32 @@
+# Game data and ROMs: NEVER commit these (the repo will be public for GitHub Pages)
+*.pk3
+*.wad
+*.pak
+*.nes
+*.sfc
+*.smc
+*.gba
+*.gb
+*.gbc
+*.gen
+*.smd
+*.n64
+*.z64
+*.v64
+*.iso
+*.cue
+
+# Local-only game files used during development
+local-data/*
+!local-data/.gitkeep
+!local-data/README.txt
+
+# Tooling / OS
+node_modules/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Python virtual environments
+.venv/
+__pycache__/

@@ -1,0 +1,10 @@
+{
+  "name": "p2p",
+  "private": true,
+  "type": "module",
+  "description": "Private serverless P2P game launcher (working title)",
+  "scripts": {
+    "serve": "node tools/serve.js",
+    "test": "node --test"
+  }
+}
