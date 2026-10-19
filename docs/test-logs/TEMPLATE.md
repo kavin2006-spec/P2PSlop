@@ -12,6 +12,7 @@
 - RTT avg / min / max:
 - Jitter:
 - Round-trip loss (clean, 60 s):
+- Diagnostics (paste from the lab's "Copy diagnostics", both sides if it failed):
 
 ## With fault injection (same preset on both tabs)
 - NL <-> India:

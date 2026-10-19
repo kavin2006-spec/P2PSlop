@@ -60,6 +60,21 @@ test('presets are well-formed', () => {
   }
 });
 
+test('sourced presets stay within 2 ms of half the Azure P50 round-trip times', () => {
+  // Azure P50 RTT (ms), 30 days to 2026-07-30: West Europe<->Central India 140/139,
+  // West Europe<->East Asia 201/203, Central India<->East Asia 87/88.
+  const sourced = { nlIndia: 139.5, nlHk: 202, indiaHk: 87.5 };
+  for (const [id, rtt] of Object.entries(sourced)) {
+    assert.ok(Math.abs(PRESETS[id].delayMs - rtt / 2) <= 2, `${id}: ${PRESETS[id].delayMs} vs ${rtt / 2}`);
+  }
+});
+
+test('estimated Alaska presets are labelled as estimates', () => {
+  for (const id of ['nlAlaska', 'hkAlaska', 'indiaAlaska']) {
+    assert.match(PRESETS[id].label, /est\./);
+  }
+});
+
 test('ChaosTransport counts drops and forwards the rest', () => {
   class Fake extends Transport {
     sent = [];

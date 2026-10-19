@@ -81,6 +81,11 @@ button {
 }
 button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); font-weight: 500; padding: 6px 12px; }
 button.ghost:hover { border-color: var(--accent); }
+.row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.row .hint { margin: 0; }
+.diag { margin-top: 12px; }
+.diag summary { cursor: pointer; font-weight: 600; }
+.diag pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0; padding: 10px; border: 1px solid var(--line); border-radius: 8px; }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .verdict { padding: 10px 14px; border-radius: 8px; border-left: 4px solid var(--muted); background: var(--field); margin-bottom: 14px; }

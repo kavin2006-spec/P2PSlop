@@ -9,11 +9,24 @@ import { Transport } from '../core/transport.js';
 
 // Delay values are ONE-WAY (what this tab adds to the packets it sends).
 // Use the same preset on both tabs: round-trip time is then about 2x the delay.
+//
+// Where the numbers come from (see docs/research/latency.md):
+//   delayMs for NL/India/HK = HALF of Azure's published median (P50) backbone RTT between
+//     West Europe, Central India and East Asia (30 days to 2026-07-30). These are datacenter
+//     numbers, so real home connections will add a little.
+//   delayMs for the Alaska presets = ESTIMATES: Azure West US 2 (Seattle) + a ~35-40 ms
+//     Alaska<->Seattle leg that has no solid published measurement. Marked "est." in the label.
+//   jitterMs / lossPct / dupPct / reorderPct are my assumptions, NOT measurements. Replace them
+//     with real numbers from docs/test-logs once friends have connected.
 export const PRESETS = {
   clean: { label: 'Clean', delayMs: 0, jitterMs: 0, lossPct: 0, dupPct: 0, reorderPct: 0 },
   wifi: { label: 'Bad Wi-Fi', delayMs: 8, jitterMs: 20, lossPct: 2, dupPct: 0, reorderPct: 1 },
   nlIndia: { label: 'NL ↔ India', delayMs: 70, jitterMs: 12, lossPct: 0.5, dupPct: 0, reorderPct: 0 },
-  indiaAlaska: { label: 'India ↔ Alaska', delayMs: 140, jitterMs: 25, lossPct: 1, dupPct: 0, reorderPct: 0.5 },
+  nlHk: { label: 'NL ↔ Hong Kong', delayMs: 100, jitterMs: 15, lossPct: 0.5, dupPct: 0, reorderPct: 0 },
+  indiaHk: { label: 'India ↔ Hong Kong', delayMs: 44, jitterMs: 8, lossPct: 0.5, dupPct: 0, reorderPct: 0 },
+  nlAlaska: { label: 'NL ↔ Alaska (est.)', delayMs: 90, jitterMs: 20, lossPct: 1, dupPct: 0, reorderPct: 0.5 },
+  hkAlaska: { label: 'HK ↔ Alaska (est.)', delayMs: 90, jitterMs: 20, lossPct: 1, dupPct: 0, reorderPct: 0.5 },
+  indiaAlaska: { label: 'India ↔ Alaska (est.)', delayMs: 125, jitterMs: 25, lossPct: 1, dupPct: 0, reorderPct: 0.5 },
   awful: { label: 'Awful', delayMs: 150, jitterMs: 80, lossPct: 8, dupPct: 2, reorderPct: 5 },
 };
 

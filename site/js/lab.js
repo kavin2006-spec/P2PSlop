@@ -6,6 +6,7 @@ import { ChaosTransport, PRESETS } from './chaos/injector.js';
 import { Pinger } from './telemetry/ping.js';
 import { readConnectionStats } from './telemetry/stats.js';
 import { TelemetryPanel } from './telemetry/panel.js';
+import { explainFailure, formatSummary } from './core/sdp-info.js';
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -15,9 +16,10 @@ const state = {
   chaos: null,
   pinger: null,
   poll: null,
+  conn: null, // latest selected-path stats once connected
   config: { ...PRESETS.clean },
 };
-const panel = new TelemetryPanel($('panel'));
+let panel = new TelemetryPanel($('panel'));
 
 // ---------- status + log ----------
 function setStatus(text, level) {
@@ -45,14 +47,23 @@ function setBusy(button, busy) {
 function showError(err) {
   console.error(err);
   log('error', err.message || String(err));
-  setStatus('error', 'bad');
+  if (state.peer?.pc.connectionState !== 'connected') setStatus('error', 'bad');
 }
 
 // ---------- connection ----------
-function newPeer() {
-  state.peer?.close();
+function dropPeer() {
+  if (state.peer) {
+    state.peer.onstate = null;
+    state.peer.ondiag = null;
+    state.peer.close();
+  }
   state.pinger?.stop();
   clearInterval(state.poll);
+  Object.assign(state, { peer: null, chaos: null, pinger: null, poll: null, conn: null });
+}
+
+function newPeer() {
+  dropPeer();
   const iceServers = params.get('stun') === 'off' ? [] : undefined;
   const peer = new Peer(iceServers ? { iceServers } : {});
   peer.onstate = (s) => {
@@ -60,13 +71,47 @@ function newPeer() {
     setStatus(s, level);
     log('connection', s);
     if (s === 'failed') {
-      log('hint', 'Connection failed. This pair probably needs a TURN relay (strict NAT). Note it in docs/test-logs.');
+      for (const line of explainFailure(peer.diag.local, peer.diag.remote)) log('why', line);
+      log('why', 'Press "Start over" on both sides before trying again, and copy the diagnostics.');
     }
   };
-  peer.ready.then(() => onReady(peer));
+  peer.ondiag = (ev) => {
+    log('diag', ev.text);
+    renderDiag();
+  };
+  peer.ready.then(() => {
+    if (state.peer === peer) onReady(peer);
+  });
   state.peer = peer;
   setStatus('connecting', 'wait');
+  renderDiag();
   return peer;
+}
+
+// ---------- diagnostics ----------
+function diagText() {
+  const peer = state.peer;
+  if (!peer) return 'No connection yet.';
+  const d = peer.diag;
+  const pc = peer.pc;
+  const lines = [
+    `role: ${d.role ?? '?'}`,
+    `browser: ${navigator.userAgent}`,
+    `this side's code: ${formatSummary(d.local)}${d.gatherMs === null ? '' : ` (gathered in ${d.gatherMs} ms${d.gatherTimedOut ? ', timed out' : ''})`}`,
+    `other side's code: ${formatSummary(d.remote)}`,
+    `states: connection ${pc.connectionState}, ice ${pc.iceConnectionState}, signaling ${pc.signalingState}`,
+  ];
+  if (state.conn) {
+    lines.push(`path: ${state.conn.path} (${state.conn.localType} / ${state.conn.remoteType}, ${state.conn.protocol})`);
+  }
+  if (pc.connectionState === 'failed') lines.push(`why: ${explainFailure(d.local, d.remote).join(' ')}`);
+  lines.push('timeline:');
+  for (const ev of d.events) lines.push(`  +${String(ev.t).padStart(6)} ms  ${ev.text}`);
+  return lines.join('\n');
+}
+
+function renderDiag() {
+  $('diag').textContent = diagText();
 }
 
 function onReady(peer) {
@@ -85,6 +130,8 @@ function onReady(peer) {
 
   state.poll = setInterval(async () => {
     const conn = await readConnectionStats(peer.pc).catch(() => null);
+    if (state.peer !== peer) return;
+    state.conn = conn;
     panel.update({ rtt: pinger.stats.snapshot(), conn });
     const c = chaos.counters;
     $('chaos-counters').textContent = `sent ${c.sent} · dropped ${c.dropped} · duplicated ${c.duplicated} · delayed ${c.delayed}`;
@@ -109,6 +156,7 @@ $('btn-connect').addEventListener('click', async (e) => {
   setBusy(e.target, true);
   try {
     if (!state.peer) throw new Error('Create an invite first.');
+    if (!$('host-reply').value.trim()) throw new Error("Paste your friend's reply first.");
     await state.peer.acceptAnswer($('host-reply').value);
     log('host', 'reply accepted, connecting…');
   } catch (err) {
@@ -145,6 +193,31 @@ for (const [btn, box] of [['copy-invite', 'host-invite'], ['copy-reply', 'join-r
     }
   });
 }
+
+$('btn-reset').addEventListener('click', () => {
+  dropPeer();
+  for (const id of ['host-invite', 'host-reply', 'join-invite', 'join-reply']) $(id).value = '';
+  $('chat-send').disabled = true;
+  $('chat-text').disabled = true;
+  $('chaos-counters').textContent = 'not running';
+  panel = new TelemetryPanel($('panel'));
+  setStatus('not connected', 'idle');
+  renderDiag();
+  log('lab', 'started over. Make a fresh invite (host) and ask your friend to press Start over too.');
+});
+
+$('copy-diag').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(diagText());
+    log('clipboard', 'diagnostics copied');
+  } catch {
+    const range = document.createRange();
+    range.selectNodeContents($('diag'));
+    getSelection().removeAllRanges();
+    getSelection().addRange(range);
+    log('clipboard', 'could not copy automatically; text is selected, press Ctrl+C');
+  }
+});
 
 // ---------- chat over the reliable channel ----------
 $('chat-form').addEventListener('submit', (e) => {

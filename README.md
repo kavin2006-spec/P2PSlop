@@ -10,7 +10,7 @@ Next: test it with real friends, then Trystero rooms. See `docs/roadmap.md`.
 
 ## Layout
 - `site/`       everything GitHub Pages will serve (launcher, Network Lab, JS modules)
-- `docs/`       architecture, decisions log, roadmap, measured test logs
+- `docs/`       architecture, decisions log, roadmap, research notes (`docs/research/`), measured test logs
 - `tools/`      local dev server and helper scripts
 - `tests/`      unit tests for the logic (telemetry math, fault injector, connection codes)
 - `local-data/` my own game files during development (gitignored, never published)
